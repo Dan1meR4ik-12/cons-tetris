@@ -221,6 +221,8 @@ namespace ConTetris
         public Figure figure;
         public ConsoleKeyInfo cki;
 
+        public string debugValue1 = "";
+
         private bool hfmDone = true;
 
         public void Flush()
@@ -288,55 +290,117 @@ namespace ConTetris
                         if (figure.fig[i ,j] == 1)
                             PersistanceField[figure.y + j, figure.x + i] = 1;
                     }
-                }
-                for (int i = 0; i < PersistanceField.GetLength(0); i++)
+                } // Запекаем столкнувшуюся фигуру в поле
+                //for (int i = 0; i < PersistanceField.GetLength(0); i++)
+                //{
+                //    while (full)
+                //    {
+                //        for (int j = 0; j < PersistanceField.GetLength(1); j++)
+                //        {
+                //            row = i;
+                //            if (PersistanceField[PersistanceField.GetLength(0) - 1 - i, j] == 0)
+                //            {
+                //                full = false;
+                //                continue;
+                //            }
+                //        }
+                //        if (full)
+                //        {
+                //            Clean(row);
+                //            //Refill();
+                //        }
+                //    }
+                //} // Очищаем получившиеся заполненные строки
+
+                for (int i = PersistanceField.GetLength(0) - 1; i >= 0; i--)
                 {
-                    while (full)
+                    full = true;
+                    for (int j = 0; j < PersistanceField.GetLength(1); j++)
                     {
-                        for (int j = 0; j < PersistanceField.GetLength(1); j++)
+                        if (PersistanceField[PersistanceField.GetLength(0) - 1 - i, j] == 0)
                         {
-                            row = i;
-                            if (PersistanceField[PersistanceField.GetLength(0) - 1 - i, j] == 0)
-                            {
-                                full = false;
-                                continue;
-                            }
+                            full = false;
+                            break; //continue;
                         }
-                        if (full)
-                        {
-                            Clean(row);
-                            //Refill();
-                        }
+                        //while (full)
+                        //{
+                        //    row = i;
+                        //    if (PersistanceField[PersistanceField.GetLength(0) - 1 - i, j] == 0)
+                        //    {
+                        //        full = false;
+                        //        continue;
+                        //    }
+                        //}
+                        //if (full)
+                        //{
+                        //    Clean(row);
+                        //    //Refill();
+                        //}
+                        //else
+                        //{
+                        //    break;
+                        //}
+                    }
+                    if (full)
+                    {
+                        debugValue1 += i.ToString() + "; ";
+                        Console.Title = debugValue1;
+                        Clean(i);
+                        //Refill();
                     }
                 }
+                debugValue1 = "";
                 figure.y = 0;
                 figure.x = 3;
-                figure.Init();
+                figure.Init(); // Сбрасываем положение для новой тетрамино
             } else
             {
                 figure.Move();
             }
-        }
+        } // Логика падения тетрамино вниз
 
         public void Clean(int row)
         {
-            int[,] prevPF = PersistanceField;
-            PersistanceField = new int[20, 10];
-
-            for (int i = 0; i < PersistanceField.GetLength(1); i++)
-            {
-                PersistanceField[PersistanceField.GetLength(0) - 1 - row, i] = 0;
-            }
-
-            for (int i = 1; i < PersistanceField.GetLength(0) - row; i++)
+            int[,] prevPF = new int[20, 10];
+            for (int i = 0; i < PersistanceField.GetLength(0); i++)
             {
                 for (int j = 0; j < PersistanceField.GetLength(1); j++)
                 {
-                    PersistanceField[i, j] = prevPF[i - 1, j];
+                    prevPF[i, j] = PersistanceField[i, j];
                 }
             }
+
+            PersistanceField = new int[20, 10];
+
+            //for (int i = 0; i < PersistanceField.GetLength(1); i++)
+            //{
+            //    PersistanceField[PersistanceField.GetLength(0) - 1 - row, i] = 0;
+            //}
+
+            for (int i = PersistanceField.GetLength(0) - row; i < PersistanceField.GetLength(0); i++)
+            {
+                for (int j = 0; j < PersistanceField.GetLength(1); j++)
+                {
+                    PersistanceField[i, j] = prevPF[i, j];
+                }
+            }
+            for (int i = PersistanceField.GetLength(0) - 1 - row; i > 0; i--)
+            {
+                for (int j = 0; j < PersistanceField.GetLength(1); j++)
+                {
+                    PersistanceField[i, j] = prevPF[i-1, j];
+                }
+            }
+
+            //for (int i = 1; i < PersistanceField.GetLength(0) - row; i++)
+            //{
+            //    for (int j = 0; j < PersistanceField.GetLength(1); j++)
+            //    {
+            //        PersistanceField[i, j] = prevPF[i - 1, j];
+            //    }
+            //}
             score++;
-        }
+        } // Чистим указанную в аргументе "row" строку и сдвигаем неупавшие блоки
         public void Refill()
         {
             int[,] prevPF = PersistanceField;
@@ -348,7 +412,7 @@ namespace ConTetris
                     PersistanceField[i, j] = prevPF[i - 1, j];
                 }
             }
-        }
+        } // Сдвигаем неупавшие блоки вниз на 1 строку
         public void HorizontalFigureMove(int dir) {
             if (dir == 0 || !hfmDone)
                 return;
@@ -382,7 +446,7 @@ namespace ConTetris
                 figure.Move(dir, 0);
             }
             hfmDone = true;
-        }
+        } // Горизонтальное передвижение фигуры
 
         public void FigureRotate()
         {
@@ -409,7 +473,7 @@ namespace ConTetris
             {
                 figure = nxtFig;
             }
-        }
+        } // Поворачиваем фигуру
 
         public void Draw()
         {
@@ -434,10 +498,10 @@ namespace ConTetris
                 Console.Write("[]");
                 Console.Write("\n");
             }
-            Console.Write("[][][][][][][][][][][][]\nScore: " + score + "\n");
+            Console.Write("[][][][][][][][][][][][]\nСчёт: " + score + "\n");
             
-           // Debug();
-        }
+           // Debug(); // Отладка
+        } // "Отрисовываем" игру в консоли
     }
 
 
@@ -447,12 +511,55 @@ namespace ConTetris
         public static Screen scr = new Screen();
         public static Timer timer = new Timer();
         public static bool alreadyPressed = false;
+        public static int speed = 1;
+        static bool startgame = false;
+        static bool validSpeed = true;
 
         static void Main(string[] args)
         {
+            while (!startgame)
+            {
+                validSpeed = true;
+                Console.Clear();
+                try
+                {
+                    string spd;
+                    Console.Write("ТЕТРИС в консоли на C#\n\nПожалуйста, укажите скорость игры в диапазоне 1-5.\nПо умолчанию - 1\n\nСкорость: ");
+                    spd = Console.ReadLine();
+                    if (spd == "")
+                    {
+                        startgame = true;
+                    }
+                    else
+                    {
+                        speed = Int32.Parse(spd);
+                    }
+                }
+                catch
+                {
+                    Console.Clear();
+                    Console.WriteLine("ОШИБКА\nВы ввели недопустимое значение!");
+                    validSpeed = false;
+                    Console.ReadKey();
+                }
+
+                if (validSpeed)
+                {
+                    if (speed < 1 || speed > 5)
+                    {
+                        Console.Clear();
+                        Console.WriteLine("ОШИБКА\nВы вышли за пределы диапазона!");
+                        Console.ReadKey();
+                    } else
+                    {
+                        startgame = true;
+                    }
+                }
+            }
+
             scr.figure = tetramino;
             timer.Elapsed += TickOfGame;
-            timer.Interval = 1000;
+            timer.Interval = 1000 / speed;
             timer.AutoReset = true;
             timer.Start();
 
