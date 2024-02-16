@@ -158,6 +158,8 @@ namespace ConTetris
 
         public void Init()
         {
+            y = 0;
+            x = 3;
             sel = rnd.Next(0, type.GetLength(0));
             rot = rnd.Next(0, 4);
             fig = type[sel, rot];
@@ -191,6 +193,19 @@ namespace ConTetris
             fig = type[sel, rot];
         }
 
+        public Figure Clone()
+        {
+            Figure newFig = new Figure()
+            {
+                fig = fig,
+                type = type,
+                sel = sel,
+                rot = rot
+            };
+
+            return newFig;
+        }
+
         public void DDraw()
         {
             for (int i = 0; i < fig.GetLength(0); i++)
@@ -216,9 +231,17 @@ namespace ConTetris
     class Screen
     {
         public int score = 0;
+        public bool GAME = true;
+        public bool gameOver = false;
+
         public int[,] Field = new int[20,10];
         public int[,] PersistanceField = new int[20, 10];
+        
         public Figure figure;
+        public Figure nextFigure;
+        public Figure holdedFigure;
+        public bool alreadyHolded = false;
+
         public ConsoleKeyInfo cki;
 
         public string debugValue1 = "";
@@ -246,6 +269,36 @@ namespace ConTetris
                 }
             }
         }
+        public void Clean(int row)
+        {
+            int[,] prevPF = new int[20, 10];
+            for (int i = 0; i < PersistanceField.GetLength(0); i++)
+            {
+                for (int j = 0; j < PersistanceField.GetLength(1); j++)
+                {
+                    prevPF[i, j] = PersistanceField[i, j];
+                }
+            }
+
+            PersistanceField = new int[20, 10];
+            
+            for (int i = PersistanceField.GetLength(0) - row; i < PersistanceField.GetLength(0); i++)
+            {
+                for (int j = 0; j < PersistanceField.GetLength(1); j++)
+                {
+                    PersistanceField[i, j] = prevPF[i, j];
+                }
+            }
+            for (int i = PersistanceField.GetLength(0) - 1 - row; i > 0; i--)
+            {
+                for (int j = 0; j < PersistanceField.GetLength(1); j++)
+                {
+                    PersistanceField[i, j] = prevPF[i-1, j];
+                }
+            }
+            
+            score++;
+        } // Чистим указанную в аргументе "row" строку и сдвигаем неупавшие блоки
 
         public void Debug()
         {
@@ -261,12 +314,10 @@ namespace ConTetris
         public void DownFigureMove() {
             bool collision = false;
             bool full = true;
-            int row = 0;
             for (int i = 0; i < figure.fig.GetLength(0); i++)
             {
                 for (int j = 0; j < figure.fig.GetLength(1); j++)
                 {
-                    //if (figure.y + j + 1 < 16)// && figure.fig[i, j] == 0)
                     {
                         if (figure.fig[i, j] == 1)
                         {
@@ -277,8 +328,6 @@ namespace ConTetris
                             
                         }
                     }
-                    //else
-                       // collision = true;
                 }
             }
             if (collision)
@@ -291,26 +340,8 @@ namespace ConTetris
                             PersistanceField[figure.y + j, figure.x + i] = 1;
                     }
                 } // Запекаем столкнувшуюся фигуру в поле
-                //for (int i = 0; i < PersistanceField.GetLength(0); i++)
-                //{
-                //    while (full)
-                //    {
-                //        for (int j = 0; j < PersistanceField.GetLength(1); j++)
-                //        {
-                //            row = i;
-                //            if (PersistanceField[PersistanceField.GetLength(0) - 1 - i, j] == 0)
-                //            {
-                //                full = false;
-                //                continue;
-                //            }
-                //        }
-                //        if (full)
-                //        {
-                //            Clean(row);
-                //            //Refill();
-                //        }
-                //    }
-                //} // Очищаем получившиеся заполненные строки
+
+                
 
                 for (int i = PersistanceField.GetLength(0) - 1; i >= 0; i--)
                 {
@@ -322,97 +353,35 @@ namespace ConTetris
                             full = false;
                             break; //continue;
                         }
-                        //while (full)
-                        //{
-                        //    row = i;
-                        //    if (PersistanceField[PersistanceField.GetLength(0) - 1 - i, j] == 0)
-                        //    {
-                        //        full = false;
-                        //        continue;
-                        //    }
-                        //}
-                        //if (full)
-                        //{
-                        //    Clean(row);
-                        //    //Refill();
-                        //}
-                        //else
-                        //{
-                        //    break;
-                        //}
                     }
                     if (full)
                     {
-                        debugValue1 += i.ToString() + "; ";
-                        Console.Title = debugValue1;
                         Clean(i);
-                        //Refill();
+                    }
+                } // Очищаем получившиеся заполненные строки
+                for (int i = 0; i < PersistanceField.GetLength(1); i++)
+                {
+                    if (PersistanceField[0, i] == 1)
+                    {
+                        gameOver = true;
+                        GAME = false;
+                        return;
                     }
                 }
-                debugValue1 = "";
+
+                alreadyHolded = false;
+
+                figure = nextFigure.Clone();
                 figure.y = 0;
                 figure.x = 3;
-                figure.Init(); // Сбрасываем положение для новой тетрамино
+
+                nextFigure.Init();
+                //figure.Init(); // Инициализируем новую тетрамино
             } else
             {
                 figure.Move();
             }
         } // Логика падения тетрамино вниз
-
-        public void Clean(int row)
-        {
-            int[,] prevPF = new int[20, 10];
-            for (int i = 0; i < PersistanceField.GetLength(0); i++)
-            {
-                for (int j = 0; j < PersistanceField.GetLength(1); j++)
-                {
-                    prevPF[i, j] = PersistanceField[i, j];
-                }
-            }
-
-            PersistanceField = new int[20, 10];
-
-            //for (int i = 0; i < PersistanceField.GetLength(1); i++)
-            //{
-            //    PersistanceField[PersistanceField.GetLength(0) - 1 - row, i] = 0;
-            //}
-
-            for (int i = PersistanceField.GetLength(0) - row; i < PersistanceField.GetLength(0); i++)
-            {
-                for (int j = 0; j < PersistanceField.GetLength(1); j++)
-                {
-                    PersistanceField[i, j] = prevPF[i, j];
-                }
-            }
-            for (int i = PersistanceField.GetLength(0) - 1 - row; i > 0; i--)
-            {
-                for (int j = 0; j < PersistanceField.GetLength(1); j++)
-                {
-                    PersistanceField[i, j] = prevPF[i-1, j];
-                }
-            }
-
-            //for (int i = 1; i < PersistanceField.GetLength(0) - row; i++)
-            //{
-            //    for (int j = 0; j < PersistanceField.GetLength(1); j++)
-            //    {
-            //        PersistanceField[i, j] = prevPF[i - 1, j];
-            //    }
-            //}
-            score++;
-        } // Чистим указанную в аргументе "row" строку и сдвигаем неупавшие блоки
-        public void Refill()
-        {
-            int[,] prevPF = PersistanceField;
-            PersistanceField = new int[20, 10];
-            for (int i = 1; i < PersistanceField.GetLength(0); i++)
-            {
-                for (int j = 0; j < PersistanceField.GetLength(1); j++)
-                {
-                    PersistanceField[i, j] = prevPF[i - 1, j];
-                }
-            }
-        } // Сдвигаем неупавшие блоки вниз на 1 строку
         public void HorizontalFigureMove(int dir) {
             if (dir == 0 || !hfmDone)
                 return;
@@ -447,7 +416,6 @@ namespace ConTetris
             }
             hfmDone = true;
         } // Горизонтальное передвижение фигуры
-
         public void FigureRotate()
         {
             bool collision = false;
@@ -474,11 +442,37 @@ namespace ConTetris
                 figure = nxtFig;
             }
         } // Поворачиваем фигуру
+        public void HoldFigure()
+        {
+            if (!alreadyHolded)
+            {
+                if (holdedFigure == null)
+                {
+                    holdedFigure = figure.Clone();
+                    figure.Init();
+                }
+                else
+                {
+
+                    Figure temp = holdedFigure.Clone();
+                    holdedFigure = figure.Clone();
+                    figure = temp.Clone();
+                    figure.x = 3;
+                    figure.y = 0;
+                }
+            }
+            alreadyHolded = true;
+        }
 
         public void Draw()
         {
-            Console.Clear();
-            Console.Write("[][][][][][][][][][][][]\n");
+            if (nextFigure == null)
+            {
+                nextFigure = new Figure();
+                nextFigure.Init();
+            }
+            Console.SetCursorPosition(0, 0);
+            Console.Write("[][][][][][][][][][][][]  \n");
             for (int i = 0; i < Field.GetLength(0); i++)
             {
                 Console.Write("[]");
@@ -495,12 +489,68 @@ namespace ConTetris
                     Console.Write(" ");
                 }
 
-                Console.Write("[]");
+                Console.Write("[]  ");
                 Console.Write("\n");
             }
-            Console.Write("[][][][][][][][][][][][]\nСчёт: " + score + "\n");
-            
-           // Debug(); // Отладка
+
+            Console.Write("[][][][][][][][][][][][]  ");
+            Console.Write("\n\nСчёт: " + score + "\n");
+
+            Console.SetCursorPosition(25, 0);
+            Console.Write("УДЕРЖ:  ");
+            if (holdedFigure != null)
+            {
+                Console.SetCursorPosition(25, 2);
+                Console.Write("          ");
+                Console.SetCursorPosition(25, 3);
+                Console.Write("          ");
+                Console.SetCursorPosition(25, 4);
+                Console.Write("          ");
+                Console.SetCursorPosition(25, 5);
+                Console.Write("          ");
+                Console.SetCursorPosition(25, 6);
+                Console.Write("          ");
+                for (int k = 0; k < holdedFigure.fig.GetLength(1); k++)
+                {
+                    Console.SetCursorPosition(25, k + 2);
+                    for (int l = 0; l < holdedFigure.fig.GetLength(0); l++)
+                    {
+                        if (holdedFigure.fig[l, k] == 1)
+                            Console.Write("#");
+                        else
+                            Console.Write(" ");
+                        Console.Write(" ");
+                    }
+                }
+            }
+
+            Console.SetCursorPosition(25, 8);
+            Console.Write("СЛЕД:  ");
+
+            Console.SetCursorPosition(25, 10);
+            Console.Write("          ");
+            Console.SetCursorPosition(25, 11);
+            Console.Write("          ");
+            Console.SetCursorPosition(25, 12);
+            Console.Write("          ");
+            Console.SetCursorPosition(25, 13);
+            Console.Write("          ");
+            Console.SetCursorPosition(25, 14);
+            Console.Write("          ");
+            for (int k = 0; k < nextFigure.fig.GetLength(1); k++)
+            {
+                Console.SetCursorPosition(25, k + 10);
+                for (int l = 0; l < nextFigure.fig.GetLength(0); l++)
+                {
+                    if (nextFigure.fig[l, k] == 1)
+                        Console.Write("#");
+                    else
+                        Console.Write(" ");
+                    Console.Write(" ");
+                }
+            }
+
+            // Debug(); // Отладка
         } // "Отрисовываем" игру в консоли
     }
 
@@ -517,6 +567,7 @@ namespace ConTetris
 
         static void Main(string[] args)
         {
+            Console.Title = "C# ТЕТРИС";
             while (!startgame)
             {
                 validSpeed = true;
@@ -524,7 +575,7 @@ namespace ConTetris
                 try
                 {
                     string spd;
-                    Console.Write("ТЕТРИС в консоли на C#\n\nПожалуйста, укажите скорость игры в диапазоне 1-5.\nПо умолчанию - 1\n\nСкорость: ");
+                    Console.Write("ТЕТРИС в консоли на C#\n\nУправление:\nСтрелки Влево, Вправо, Вниз отвечают за соответствующее передвижение тетрамино\nСтрелка Вверх - поворачивает тетрамино\nЦифра 0 на цифровой клавиатуре ИЛИ Клавиша End - удержать/заместить данную фигуру\nESC - Выход\n\nПожалуйста, укажите скорость игры в диапазоне 1-5.\nПо умолчанию - 1\n\nСкорость: ");
                     spd = Console.ReadLine();
                     if (spd == "")
                     {
@@ -532,7 +583,7 @@ namespace ConTetris
                     }
                     else
                     {
-                        speed = Int32.Parse(spd);
+                        speed = int.Parse(spd);
                     }
                 }
                 catch
@@ -545,12 +596,25 @@ namespace ConTetris
 
                 if (validSpeed)
                 {
-                    if (speed < 1 || speed > 5)
+                    if (speed > 5)
                     {
                         Console.Clear();
                         Console.WriteLine("ОШИБКА\nВы вышли за пределы диапазона!");
                         Console.ReadKey();
-                    } else
+                    }
+                    else if (speed == 0)
+                    {
+                        Console.Clear();
+                        Console.WriteLine("ОШИБКА\nИзвините, но мне кажется, играть в застывшую картинку вовсе не интересно.");
+                        Console.ReadKey();
+                    }
+                    else if (speed < 0)
+                    {
+                        Console.Clear();
+                        Console.WriteLine("ОШИБКА\nА как Вы представляете себе игру с отрицательной скоростью?");
+                        Console.ReadKey();
+                    }
+                    else
                     {
                         startgame = true;
                     }
@@ -566,15 +630,19 @@ namespace ConTetris
             tetramino.Init();
             tetramino.x = 3; tetramino.y = 0;
 
+            Console.Clear();
+            Console.SetWindowSize(50, 30);
+            Console.SetBufferSize(50, 30);
             scr.Flush();
             scr.Draw();
-            while (true)
+            while (scr.GAME)
             {
                 scr.cki = Console.ReadKey();
                 if (scr.cki.Key == ConsoleKey.Escape)
                     break;
                 alreadyPressed = false;
             }
+
         }
 
         private static void TickOfGame(object sender, ElapsedEventArgs e)
@@ -590,9 +658,20 @@ namespace ConTetris
                     scr.HorizontalFigureMove(1);
                 else if (scr.cki.Key == ConsoleKey.DownArrow)
                     scr.DownFigureMove();
+                else if (scr.cki.Key == ConsoleKey.End || scr.cki.Key == ConsoleKey.NumPad0)
+                    scr.HoldFigure();
                 alreadyPressed = true;
             }
-            //else
+            if (scr.gameOver)
+            {
+                timer.Stop();
+                Console.SetCursorPosition(0, 22);
+                Console.WriteLine("ИГРА ОКОНЧЕНА");
+                if (!alreadyPressed)
+                    Console.ReadKey();
+                return;
+            } // Проверяем, если игра уже окончена, то выводим сообщение об этом и прекращаем дальнейшие действия
+
             scr.Flush();
             scr.Draw();
             
