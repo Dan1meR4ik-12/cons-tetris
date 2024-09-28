@@ -30,7 +30,7 @@ namespace ConTetris
                     { 1, 1, 1 },
                     { 0, 1, 0 }
                 }
-            },
+            }, // T
             {
                 new int[,] {
                     { 1, 1 },
@@ -45,7 +45,7 @@ namespace ConTetris
                     { 1, 1 },
                     { 1, 1 }
                 }
-            },
+            }, // Square
             {
                 new int[,] {
                     { 0, 0, 1, 0 },
@@ -68,7 +68,7 @@ namespace ConTetris
                     { 0, 0, 0, 0 },
                     { 0, 0, 0, 0 }
                 }
-            },
+            }, // Stick
             {
                 new int[,] {
                     { 1, 0, 0 },
@@ -87,7 +87,7 @@ namespace ConTetris
                     { 0, 1, 1 },
                     { 1, 1, 0 }
                 }
-            },
+            }, // Ladder to right
             {
                 new int[,] {
                     { 0, 1, 0 },
@@ -106,7 +106,7 @@ namespace ConTetris
                     { 1, 1, 0 },
                     { 0, 1, 1 }
                 }
-            },
+            }, // Ladder to left
             {
                 new int[,] {
                     { 1, 1, 0 },
@@ -125,7 +125,7 @@ namespace ConTetris
                     { 1, 0, 0 },
                     { 1, 1, 1 }
                 }
-            },
+            }, // Г
             {
                 new int[,] {
                     { 0, 1, 1 },
@@ -144,7 +144,7 @@ namespace ConTetris
                     { 1, 0, 0 },
                     { 0, 0, 0 }
                 }
-            }
+            } // Mirrored Г
         };
         public int sel = 0;
         public int rot = 0;
@@ -154,7 +154,7 @@ namespace ConTetris
         {
             x += dirX;
             y += dirY;
-        }
+        } // Just moving the Tetramino by changing its position
 
         public void Init()
         {
@@ -164,34 +164,16 @@ namespace ConTetris
             rot = rnd.Next(0, 4);
             fig = type[sel, rot];
             //Rotate(true);
-        }
+        } // Initializing a new Tetramino
 
         public void Rotate(bool random = false)
         {
-            //int[,] prevPic = fig;
-            //fig = new int[prevPic.GetLength(1), prevPic.GetLength(0)];
-
-            //int round;
-            //if (random)
-            //    round = rnd.Next(0, 4);
-            //else
-            //    round = 1;
-
-            //for (int r = 0; r < round; r++)
-            //{
-            //    for (int i = 0; i < prevPic.GetLength(1); i++)
-            //    {
-            //        for (int j = 0; j < prevPic.GetLength(0); j++)
-            //        {
-            //            fig[i, j] = prevPic[prevPic.GetLength(0) - j - 1, i];
-            //        }
-            //    }
-            //}
             rot--;
             if (rot < 0)
                 rot = 3;
             fig = type[sel, rot];
-        }
+        }  // Rotate Tetramino using its next rotation variation
+        
 
         public Figure Clone()
         {
@@ -204,7 +186,7 @@ namespace ConTetris
             };
 
             return newFig;
-        }
+        } // Clone the Tetramino for further using
 
         public void DDraw()
         {
@@ -224,18 +206,19 @@ namespace ConTetris
                 Console.Write("\n");
             }
             Console.Write("\n");
-        }
+        } // Drawing the Tetramino using '#' char
         
     }
 
     class Screen
     {
+        public bool isRus = System.Globalization.CultureInfo.CurrentCulture.EnglishName.ToString().Contains("Russian");
         public int score = 0;
         public bool GAME = true;
         public bool gameOver = false;
 
-        public int[,] Field = new int[20,10];
-        public int[,] PersistanceField = new int[20, 10];
+        public int[,] Field = new int[20,10]; // Game field
+        public int[,] PersistanceField = new int[20, 10]; // Baked-blocks field
         
         public Figure figure;
         public Figure nextFigure;
@@ -244,7 +227,6 @@ namespace ConTetris
 
         public ConsoleKeyInfo cki;
 
-        public string debugValue1 = "";
 
         private bool hfmDone = true;
 
@@ -257,7 +239,7 @@ namespace ConTetris
                 for (int l = 0; l < figure.fig.GetLength(1); l++)
                 {
                     if (figure.fig[k, l] == 1)
-                        Field[figure.y + l, figure.x + k] = 1; //figure.fig[k, l];
+                        Field[figure.y + l, figure.x + k] = 1;
                 }
             }
             for (int i = 0; i < Field.GetLength(0); i++)
@@ -268,7 +250,7 @@ namespace ConTetris
                         Field[i, j] = PersistanceField[i, j];
                 }
             }
-        }
+        } // Combining the Tetramino and the Baked-blocks field
         public void Clean(int row)
         {
             int[,] prevPF = new int[20, 10];
@@ -298,7 +280,7 @@ namespace ConTetris
             }
             
             score++;
-        } // Чистим указанную в аргументе "row" строку и сдвигаем неупавшие блоки
+        } // Cleaning selected "row" row and moving further blocks down
 
         public void Debug()
         {
@@ -310,7 +292,7 @@ namespace ConTetris
 
             //figure.DDraw();
 
-        }
+        } // Show the information you may need
 
         public void DownFigureMove() {
             bool collision = false;
@@ -340,10 +322,7 @@ namespace ConTetris
                         if (figure.fig[i ,j] == 1)
                             PersistanceField[figure.y + j, figure.x + i] = 1;
                     }
-                } // Запекаем столкнувшуюся фигуру в поле
-
-                
-
+                } // Baking collided Tetramino into the field
                 for (int i = PersistanceField.GetLength(0) - 1; i >= 0; i--)
                 {
                     full = true;
@@ -359,7 +338,7 @@ namespace ConTetris
                     {
                         Clean(i);
                     }
-                } // Очищаем получившиеся заполненные строки
+                } // Cleaning filled rows
                 for (int i = 0; i < PersistanceField.GetLength(1); i++)
                 {
                     if (PersistanceField[0, i] == 1)
@@ -368,7 +347,7 @@ namespace ConTetris
                         GAME = false;
                         return;
                     }
-                }
+                } // If the Tetramino reched the top corner then game over
 
                 alreadyHolded = false;
 
@@ -377,12 +356,11 @@ namespace ConTetris
                 figure.x = 3;
 
                 nextFigure.Init();
-                //figure.Init(); // Инициализируем новую тетрамино
             } else
             {
                 figure.Move();
             }
-        } // Логика падения тетрамино вниз
+        } // Logick of Tetramino's down-moving
         public void HorizontalFigureMove(int dir) {
             if (dir == 0 || !hfmDone)
                 return;
@@ -405,7 +383,6 @@ namespace ConTetris
                         }
                         else
                         {
-                            Debug();
                             collision = true;
                             break;
                         }
@@ -418,7 +395,7 @@ namespace ConTetris
                 figure.Move(dir, 0);
             }
             hfmDone = true;
-        } // Горизонтальное передвижение фигуры
+        } // Logick of Tetramino's horizontal moving
         public void FigureRotate()
         {
             bool collision = false;
@@ -444,7 +421,7 @@ namespace ConTetris
             {
                 figure = nxtFig;
             }
-        } // Поворачиваем фигуру
+        } // Rotating the Tetramino
         public void HoldFigure()
         {
             if (!alreadyHolded)
@@ -465,7 +442,7 @@ namespace ConTetris
                 }
             }
             alreadyHolded = true;
-        }
+        } // Holding the Tetramino
 
         public void Draw()
         {
@@ -497,10 +474,10 @@ namespace ConTetris
             }
 
             Console.Write("[][][][][][][][][][][][]  ");
-            Console.Write("\n\nСчёт: " + score + "\n");
+            Console.Write((isRus ? "\n\nСчёт: " : "\n\nScore: ") + score + "\n");
 
             Console.SetCursorPosition(25, 0);
-            Console.Write("УДЕРЖ:  ");
+            Console.Write(isRus ? "УДЕРЖ:  " : "HOLD:  ");
             if (holdedFigure != null)
             {
                 Console.SetCursorPosition(25, 2);
@@ -528,7 +505,7 @@ namespace ConTetris
             }
 
             Console.SetCursorPosition(25, 8);
-            Console.Write("СЛЕД:  ");
+            Console.Write(isRus ? "СЛЕД:  " : "NEXT:  ");
 
             Console.SetCursorPosition(25, 10);
             Console.Write("          ");
@@ -554,9 +531,8 @@ namespace ConTetris
             }
 
             // Debug(); // Отладка
-        } // "Отрисовываем" игру в консоли
+        } // Drawing the game in the Console
     }
-
 
     class Program
     {
@@ -570,7 +546,7 @@ namespace ConTetris
 
         static void Main(string[] args)
         {
-            Console.Title = "C# ТЕТРИС";
+            Console.Title = scr.isRus ? "C# ТЕТРИС" : "C# TETRIS";
             while (!startgame)
             {
                 validSpeed = true;
@@ -578,7 +554,24 @@ namespace ConTetris
                 try
                 {
                     string spd;
-                    Console.Write("ТЕТРИС в консоли на C#\n\nУправление:\nСтрелки Влево, Вправо, Вниз отвечают за соответствующее передвижение тетрамино\nСтрелка Вверх - поворачивает тетрамино\nЦифра 0 на цифровой клавиатуре ИЛИ Клавиша End - удержать/заместить данную фигуру\nESC - Выход\n\nПожалуйста, укажите скорость игры в диапазоне 1-5.\nПо умолчанию - 1\n\nСкорость: ");
+                    Console.Write( scr.isRus ? "ТЕТРИС в консоли на C#" +
+                        "\n\nУправление:" +
+                        "\nСтрелки Влево, Вправо, Вниз отвечают за соответствующее передвижение тетрамино" +
+                        "\nСтрелка Вверх - поворачивает тетрамино" +
+                        "\nЦифра 0 на цифровой клавиатуре ИЛИ Клавиша End - удержать/заместить данную фигуру" +
+                        "\nESC - Выход" +
+                        "\n\nПожалуйста, укажите скорость игры в диапазоне 1-5." +
+                        "\nПо умолчанию - 1" +
+                        "\n\nСкорость: " :
+                        "TETRIS in the console on C#" +
+                        "\n\nHow to play:" +
+                        "\nArrows Left, Right, Down moving the Tetramino by its direction" +
+                        "\nArrow Up is Rotate the Tetramino" +
+                        "\nNumpad 0 OR the End key is Hold current Tetramino" +
+                        "\nESC is exit" +
+                        "\n\nPlease, choose speed of the game (1-5)" +
+                        "\nDefault is 1" +
+                        "\n\nSpeed: ");
                     spd = Console.ReadLine();
                     if (spd == "")
                     {
@@ -592,7 +585,7 @@ namespace ConTetris
                 catch
                 {
                     Console.Clear();
-                    Console.WriteLine("ОШИБКА\nВы ввели недопустимое значение!");
+                    Console.WriteLine(scr.isRus ? "ОШИБКА\nВы ввели недопустимое значение!" : "ERROR\nIncorrect value!");
                     validSpeed = false;
                     Console.ReadKey();
                 }
@@ -602,19 +595,19 @@ namespace ConTetris
                     if (speed > 5)
                     {
                         Console.Clear();
-                        Console.WriteLine("ОШИБКА\nВы вышли за пределы диапазона!");
+                        Console.WriteLine(scr.isRus ? "ОШИБКА\nВы вышли за пределы диапазона!" : "ERROR\nOut of bounds!");
                         Console.ReadKey();
                     }
                     else if (speed == 0)
                     {
                         Console.Clear();
-                        Console.WriteLine("ОШИБКА\nИзвините, но мне кажется, играть в застывшую картинку вовсе не интересно.");
+                        Console.WriteLine(scr.isRus ? "ОШИБКА\nИзвините, но мне кажется, играть в застывшую картинку вовсе не интересно.":"ERROR\nSorry but playing the static picture doesn't look interesting");
                         Console.ReadKey();
                     }
                     else if (speed < 0)
                     {
                         Console.Clear();
-                        Console.WriteLine("ОШИБКА\nА как Вы представляете себе игру с отрицательной скоростью?");
+                        Console.WriteLine(scr.isRus ? "ОШИБКА\nА как Вы представляете себе игру с отрицательной скоростью?":"ERROR\nHow can you imagine playing a game with negative speed?");
                         Console.ReadKey();
                     }
                     else
@@ -622,20 +615,19 @@ namespace ConTetris
                         startgame = true;
                     }
                 }
-            }
+            } // Choosing the speed of the game
 
             scr.figure = tetramino;
             timer.Elapsed += TickOfGame;
             timer.Interval = 1000 / speed;
             timer.AutoReset = true;
-            timer.Start();
+            timer.Start(); // This is the tick-timer
 
             tetramino.Init();
-            tetramino.x = 3; tetramino.y = 0;
 
             Console.Clear();
-            Console.SetWindowSize(50, 40);
-            Console.SetBufferSize(50, 40);
+            Console.SetWindowSize(50, 30);
+            Console.SetBufferSize(50, 30);
             scr.Flush();
             scr.Draw();
             while (scr.GAME)
@@ -644,15 +636,13 @@ namespace ConTetris
                 if (scr.cki.Key == ConsoleKey.Escape)
                     break;
                 alreadyPressed = false;
-            }
-
+            } // Endless game cycle (ESC = exit)
         }
 
         private static void TickOfGame(object sender, ElapsedEventArgs e)
         {
             if (!alreadyPressed)
             {
-                //throw new NotImplementedException();
                 if (scr.cki.Key == ConsoleKey.LeftArrow)
                     scr.HorizontalFigureMove(-1);
                 else if (scr.cki.Key == ConsoleKey.UpArrow)
@@ -664,16 +654,18 @@ namespace ConTetris
                 else if (scr.cki.Key == ConsoleKey.End || scr.cki.Key == ConsoleKey.NumPad0)
                     scr.HoldFigure();
                 alreadyPressed = true;
-            }
+            } // Reading input keys
             if (scr.gameOver)
             {
                 timer.Stop();
                 Console.SetCursorPosition(0, 22);
-                Console.WriteLine("ИГРА ОКОНЧЕНА");
+                Console.WriteLine(
+                    System.Globalization.CultureInfo.CurrentCulture.EnglishName.ToString().Contains("Russian") ? 
+                    "ИГРА ОКОНЧЕНА" : "GAME OVER");
                 if (!alreadyPressed)
                     Console.ReadKey();
                 return;
-            } // Проверяем, если игра уже окончена, то выводим сообщение об этом и прекращаем дальнейшие действия
+            } // If the game is over then show the message and stop the game
 
             scr.Flush();
             scr.Draw();
