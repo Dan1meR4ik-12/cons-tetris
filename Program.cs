@@ -302,12 +302,13 @@ namespace ConTetris
 
         public void Debug()
         {
+            Console.SetCursorPosition(0, 25);
             Console.WriteLine("FIGURE DEBUG\nX: " + figure.x + "; Y: " + figure.y +
                 "\nType: " + figure.sel + " \\ " + (figure.type.GetLength(0) - 1) + 
                 "\nRotation: " + figure.rot + " \\ 3" + 
                 "\nWidth: " + figure.fig.GetLength(1) + "; Height: " + figure.fig.GetLength(0));
 
-            figure.DDraw();
+            //figure.DDraw();
 
         }
 
@@ -394,7 +395,7 @@ namespace ConTetris
                 {
                     if (figure.fig[i, j] == 1)
                     {
-                        if (figure.x + i > 0 && figure.x + i + dir < PersistanceField.GetLength(1))
+                        if ((dir == 1 ? true : figure.x + i > 0) && figure.x + i + dir < PersistanceField.GetLength(1))
                         {
                             if (PersistanceField[figure.y + j, figure.x + i + dir] == 1)
                             {
@@ -404,9 +405,11 @@ namespace ConTetris
                         }
                         else
                         {
+                            Debug();
                             collision = true;
                             break;
                         }
+
                     }
                 }
             }
@@ -631,8 +634,8 @@ namespace ConTetris
             tetramino.x = 3; tetramino.y = 0;
 
             Console.Clear();
-            Console.SetWindowSize(50, 30);
-            Console.SetBufferSize(50, 30);
+            Console.SetWindowSize(50, 40);
+            Console.SetBufferSize(50, 40);
             scr.Flush();
             scr.Draw();
             while (scr.GAME)
